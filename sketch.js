@@ -11,7 +11,6 @@ const ctx = canvas.getContext('2d');
 
 const zoomInButton = document.querySelector('.zoom.in');
 const zoomOutButton = document.querySelector('.zoom.out');
-const createButton = document.querySelector('create-button');
 
 document.addEventListener('click',clickEvent);
 
@@ -23,7 +22,7 @@ const newOrigin = {
 ctx.translate(newOrigin.x,newOrigin.y);
 ctx.scale(1,-1);
 
-const originalScaleFactor = 128;
+const originalScaleFactor = 64;
 let scaleFactor = originalScaleFactor;
 // let fontSize = scaleFactor/2;
 let fontSize = 18;
@@ -217,6 +216,58 @@ function createLabels(){
     ctx.scale(1,-1);
 }
 
+function findIntersection(eq1,eq2){
+    const a1 = eq1.a;
+    const b1 = eq1.b;
+    const c1 = eq1.c;
+
+    const a2 = eq2.a;
+    const b2 = eq2.b;
+    const c2 = eq2.c;
+
+    log(eq1.a);
+    
+    // solution of linear equations by cross-multiplication
+    // if b2a1 - b1a2 != 0
+    // x = (b1c2 - b2c1) / (b2a1 - b1a2)
+    // y = (c1a2 - c2a1) / (b2a1 - b1a2)
+
+    if((b2*a1 - b1*a2) != 0){
+        const x = (b1*c2 - b2*c1) / (b2*a1 - b1*a2);
+        const y = (c1*a2 - c2*a1) / (b2*a1 - b1*a2);
+
+        log('sol: ',x,y);
+
+        drawIntersection(x,y);
+
+    }
+}
+
+function drawIntersection(x,y){
+    const scaledX = x * scaleFactor;
+    const scaledY = y * scaleFactor;
+
+    log('scaled sol:',scaledX,scaledY);
+
+    const intersection = new Path2D();
+    intersection.arc(scaledX,scaledY,4,0,2*Math.PI);
+
+    ctx.fillStyle = 'rgba(255, 0, 0, 0.7)';
+    ctx.strokeStyle = 'rgb(255, 0, 0)';
+    ctx.fill(intersection);
+
+    ctx.scale(1,-1);
+    ctx.font = '20px serif';
+
+    // rounding off to 2 decimal places
+
+    x = Math.round(100 * x)/100;
+    y = Math.round(100 * y)/100;
+
+    ctx.fillText(`(${x},${y})`,scaledX + 10,-scaledY-5);
+    ctx.scale(1,-1);
+}
+
 function animate(){
     ctx.clearRect(-canvas.width/2,-canvas.height/2,canvas.width,canvas.height);
 
@@ -226,9 +277,11 @@ function animate(){
     equation1.createGraph();
     equation2.createGraph();
 
+    findIntersection(equation1,equation2);
+
     log(scaleFactor);
 
-    if(scaleFactor == originalScaleFactor){
+    if(scaleFactor == 2 * originalScaleFactor){
         zoomInButton.disabled = true;
     }
     else{
